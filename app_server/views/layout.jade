@@ -6,6 +6,19 @@ html
     link(rel='stylesheet', href='/bootstrap/css/amelia.bootstrap.css')
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
+    .navbar.navbar-default.navbar-fixed-top
+      .container
+        .navbar-header
+          a.navbar-brand(href='/') Loc8r
+          button.navbar-toggle(type='button', data-toggle='collapse', data-target='#navbar-main')
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+        #navbar-main.navbar-collapse.collapse
+          ul.nav.navbar-nav
+            li
+              a(href='/about/') About
+    
     block content
       
     script(src='/javascripts/jquery.min.js')
