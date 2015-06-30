@@ -6,23 +6,7 @@ var sendJsonResponse = function(res, status, content) {
     res.json(content);
 };
 
-var theEarth = (function() {
-  var earthRadius = 6371; // km, miles is 3959
-
-  var getDistanceFromRads = function(rads) {
-    return parseFloat(rads * earthRadius);
-  };
-
-  var getRadsFromDistance = function(distance) {
-    return parseFloat(distance / earthRadius);
-  };
-
-  return {
-    getDistanceFromRads: getDistanceFromRads,
-    getRadsFromDistance: getRadsFromDistance
-  };
-})();
-
+/* GET list of locations */
 module.exports.locationsListByDistance = function(req, res) {
   var lng = parseFloat(req.query.lng);
   var lat = parseFloat(req.query.lat);
@@ -33,10 +17,10 @@ module.exports.locationsListByDistance = function(req, res) {
   };
   var geoOptions = {
     spherical: true,
-    maxDistance: theEarth.getRadsFromDistance(maxDistance),
-    num: 10
+    maxDistance: (maxDistance / 0.000621371) , // converts to miles
+    distanceMultiplier: 0.000621371 // converts to miles
   };
-  if (!lng || !lat || !maxDistance) {
+  if ((!lng && lng!==0) || (!lat && lat!==0) || ! maxDistance) {
     console.log('locationsListByDistance missing params');
     sendJsonResponse(res, 404, {
       "message": "lng, lat and maxDistance query parameters are all required"
@@ -61,7 +45,7 @@ var buildLocationList = function(req, res, results, stats) {
   var locations = [];
   results.forEach(function(doc) {
     locations.push({
-      distance: theEarth.getDistanceFromRads(doc.dis),
+      distance: doc.dis,
       name: doc.obj.name,
       address: doc.obj.address,
       rating: doc.obj.rating,
@@ -71,6 +55,7 @@ var buildLocationList = function(req, res, results, stats) {
   });
   return locations;
 };
+
 
 module.exports.locationsReadOne = function(req, res) {
   console.log('Finding location details', req.params);
