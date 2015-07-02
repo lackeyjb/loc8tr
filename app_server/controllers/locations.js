@@ -50,7 +50,7 @@ var renderHomepage = function(req, res, responseBody) {
       title: 'Loc8r',
       strapline: 'Find places to work with wifi near you!'
     },
-    sidebar: "Looking for wifi and a seat? Loc8r helps you find places to work when out and about. Perhaps with coffee, cake or       a pint? Let Loc8r help you find the place you're looking for.",
+    sidebar: "Looking for wifi and a seat? Loc8r helps you find places to work when out and about. Perhaps with coffee, cake or a pint? Let Loc8r help you find the place you're looking for.",
     locations: responseBody,
     message: message
   });
@@ -67,7 +67,7 @@ module.exports.homeList = function(req, res) {
     qs: {
       lng: '-84.34542',
       lat: '33.740386',
-      maxDistance: 10
+      maxDistance: 300
     }
   };
   request(
@@ -81,6 +81,31 @@ module.exports.homeList = function(req, res) {
         }
       }
       renderHomepage(req, res, data);
+    }
+  );
+};
+
+var getLocationInfo = function(req, res, callback) {
+  var requestOptions, path;
+  path = '/api/locations/' + req.params.locationid;
+  requestOptions = {
+    url: apiOptions.server + path,
+    method: 'GET',
+    json: {}
+  };
+  request(
+    requestOptions,
+    function(err, response, body) {
+      var data = body;
+      if (response.statusCode === 200) {
+        data.coords = {
+          lng: body.coords[0],
+          lat: body.coords[1]
+        };
+        callback(req, res, data);
+      } else {
+        _showError(req, res, response.statusCode);
+      }
     }
   );
 };
@@ -99,37 +124,55 @@ var renderDetailPage = function(req, res, locDetail) {
 
 /* GET 'Location info' page */
 module.exports.locationInfo = function(req, res) {
-  var requestOptions, path;
-  path = '/api/locations/' + req.params.locationid;
-  requestOptions = {
-    url: apiOptions.server + path,
-    method: 'GET',
-    json: {}
-  };
-  request(
-    requestOptions,
-    function(err, response, body) {
-      var data = body;
-      if (response.statusCode === 200) {
-        data.coords = {
-          lng: body.coords[0],
-          lat: body.coords[1]
-        };
-        renderDetailPage(req, res, data);
-      } else {
-        _showError(req, res, response.statusCode);
-      }
-    }
-  );
+  getLocationInfo(req, res, function(req, res, responseData) {
+    renderDetailPage(req, res, responseData);
+  });
+};
+
+var renderReviewForm = function(req, res, locDetail) {
+  res.render('location-review-form', {
+    title: 'Review ' + locDetail.name + ' on Loc8r',
+    pageHeader: {title: 'Review ' + locDetail.name},
+    error: req.query.err
+  });
 };
 
 /* GET 'Add review' page */
 module.exports.addReview = function(req, res) {
-  res.render('location-review-form', {
-    title: 'Review Starcups on Loc8r',
-    pageHeader: { title: 'Review Starcups' },
-    user: {
-      displayName: 'Bryan Lackey'
-    }
+  getLocationInfo(req, res, function(req, res, responseData) {
+    renderReviewForm(req, res, responseData);
   });
+};
+
+module.exports.doAddReview = function(req, res) {
+  var requestOptions, path, locationid, postdata;
+  locationid = req.params.locationid;
+  path = '/api/locations/' + locationid + '/reviews';
+  postdata = {
+    author: req.body.name,
+    rating: parseInt(req.body.rating, 10),
+    reviewText: req.body.review
+  };
+  requestOptions = {
+    url: apiOptions.server + path,
+    method: 'POST',
+    json: postdata
+  };
+  if (!postdata.author || !postdata.rating || !postdata.reviewText) {
+    res.redirect('/location/' + locationid + '/reviews/new?err=val');
+  } else {
+    request(
+      requestOptions,
+      function(err, response, body) {
+        if (response.statusCode === 201) {
+          res.redirect('/location/' + locationid);
+        } else if (response.statusCode === 400 && body.name && body.name === 'ValidationError') {
+          res.redirect('/location/' + locationid + '/reviews/new?err=val');
+        } else {
+          console.log(body);
+          _showError(req, res, response.statusCode);
+        }
+      }
+    );
+  }
 };
