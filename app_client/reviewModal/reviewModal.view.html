@@ -1,5 +1,10 @@
 <div class="modal-content">
-  <form id="addReview" name="addReview" role="form" class="form-horizontal">
+  <form id="addReview"
+        name="addReview"
+        role="form"
+        ng-submit="vm.onSubmit()"
+        class="form-horizontal">
+
     <div class="modal-header">
       <button type="button" ng-click="vm.modal.cancel()" class="close">
         <span aria-hidden="true">x</span>
@@ -10,6 +15,7 @@
       </h4>
     </div>
     <div class="modal-body">
+      <div role="alert" ng-show="vm.formError" class="alert alert-danger">{{ vm.formError }}</div>
       <div class="form-group">
         <label for="name" class="col-xs-2 col-sm-2 control-label">Name</label>
         <div class="col-xs-10 col-sm-10">
@@ -52,5 +58,6 @@
       <button ng-click="vm.modal.cancel()" type="button" class="btn btn-default">Cancel</button>
       <button type="submit" class="btn btn-primary">Submit review</button>
     </div>
+
   </form>
 </div>
