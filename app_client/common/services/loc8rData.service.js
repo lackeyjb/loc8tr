@@ -6,24 +6,26 @@
 
   loc8rData.$inject = ['$http'];
   function loc8rData ($http) {
-    var locationByCoords = function(lat, lng) {
-      return $http.get('/api/locations?lng=' + lng + '&lat=' + lat +
-        '&maxDistance=20');
-    };
-
-    var locationById = function(locationid) {
-      return $http.get('/api/locations/' + locationid);
-    };
-
-    var addReviewById = function(locationid, data) {
-      return $http.post('/api/locations/' + locationid + '/reviews', data);
-    };
-
-    return {
+    
+    var loc8rData = {
       locationByCoords: locationByCoords,
       locationById: locationById,
       addReviewById: addReviewById
     };
+    return loc8rData;
+    
+    function locationByCoords(lat, lng) {
+      return $http.get('/api/locations?lng=' + lng + '&lat=' + lat +
+        '&maxDistance=20');
+    }
+
+    function locationById(locationid) {
+      return $http.get('/api/locations/' + locationid);
+    }
+
+    function addReviewById(locationid, data) {
+      return $http.post('/api/locations/' + locationid + '/reviews', data);
+    }
   }
 
 })();
